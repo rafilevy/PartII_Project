@@ -1,0 +1,2 @@
+# Runs mpfshell and automatically connects to a LoPy if one is connected based on their dev names given on Mac OS
+mpfshell $(ls /dev | grep -e "tty\.usbmodemPy.*" | head -1)
