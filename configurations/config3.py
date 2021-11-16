@@ -14,13 +14,14 @@ import time
 import ubinascii
 import encode
 import pycom
+import machine
 
 from network import LoRa
 from pycoproc import Pycoproc
 from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
 
 
-SENDING_INTERVAL = 10 #Interval at which to send data messages to the server, (seconds)
+SENDING_INTERVAL = 60 #Interval at which to send data messages to the server, (seconds)
 
 #Disable LED blink
 pycom.heartbeat(False)
