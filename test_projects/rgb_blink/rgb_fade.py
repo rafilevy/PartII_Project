@@ -1,9 +1,6 @@
 import time
 import pycom
 
-from pycoproc_1 import Pycoproc
-from LIS2HH12 import LIS2HH12
-
 pycom.heartbeat(False)
 
 def hsv_to_rgb(h, s, v):
@@ -31,9 +28,6 @@ def hsv_to_rgb(h, s, v):
 def rgb_to_hex(rgb):
     r,g,b = rgb
     return (int(r*255) << 16) + (int(g*255)<<8) + (int(b*255))
-
-# py = Pycoproc(Pycoproc.PYSENSE)
-# li = LIS2HH12(py)
 
 hue = 0
 while True:
