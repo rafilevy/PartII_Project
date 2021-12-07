@@ -1,6 +1,6 @@
 """
-Config 2: machine.sleep idle
-This config uses machine.sleep to go into a light sleep between sending data
+Config 1: time.sleep idle
+This config uses time.sleep to idle between sending data
 It sends it's temperature data to the server at a specified interval 
 
 LED KEY:
@@ -14,10 +14,10 @@ import time
 import ubinascii
 import encode
 import pycom
-import machine
 
 from network import LoRa
-
+# from pycoproc import Pycoproc
+# from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
 
 
 SENDING_INTERVAL = 10 #Interval at which to send data messages to the server, s
@@ -27,6 +27,7 @@ pycom.heartbeat(False)
 
 
 #Configure LoRa connection parameters and join network
+# pycom.rgbled(0x070000) # LED red
 app_eui = ubinascii.unhexlify('0000000000000000')
 app_key = ubinascii.unhexlify('9BE36B464B60455F8CC3760BAFB46F98')
 
@@ -44,23 +45,29 @@ s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 s.setblocking(False)
 
+#Configure temperature sensor
+# pycoproc = Pycoproc()
+# si = SI7006A20(pycoproc)
 
 #Main sending loop
 while True:
+    # pycom.rgbled(0x000700) #LED green
     # temp = si.temperature()
-    temp = 26.291
+    temp = 27.96
     encoded_temp = encode.float_to_fixed_point(temp, 5)
 
+    time.sleep(0.5)
     pycom.rgbled(0x00ff00) #LED green
-    time.sleep(0.2)
+    time.sleep(0.5)
     pycom.rgbled(0)
-    time.sleep(0.2)
+    time.sleep(0.5)
 
     s.send(encoded_temp)
     
-    time.sleep(0.2)
+    time.sleep(0.5)
     pycom.rgbled(0x00ff00) #LED green
-    time.sleep(0.2)
+    time.sleep(0.5)
     pycom.rgbled(0)
+    time.sleep(0.5)
 
-    machine.sleep(SENDING_INTERVAL)
+    time.sleep(SENDING_INTERVAL)

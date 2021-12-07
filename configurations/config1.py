@@ -16,8 +16,8 @@ import encode
 import pycom
 
 from network import LoRa
-from pycoproc import Pycoproc
-from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
+# from pycoproc import Pycoproc
+# from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
 
 
 SENDING_INTERVAL = 10 #Interval at which to send data messages to the server, s
@@ -27,7 +27,7 @@ pycom.heartbeat(False)
 
 
 #Configure LoRa connection parameters and join network
-pycom.rgbled(0x070000) # LED red
+# pycom.rgbled(0x070000) # LED red
 app_eui = ubinascii.unhexlify('0000000000000000')
 app_key = ubinascii.unhexlify('9BE36B464B60455F8CC3760BAFB46F98')
 
@@ -39,7 +39,6 @@ while not lora.has_joined():
     print('.', end="")
 
 print('\nSuccessfully joined LoRa network.')
-pycom.rgbled(0x000007) # LED blue
 
 # Create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
@@ -47,18 +46,28 @@ s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 s.setblocking(True)
 
 #Configure temperature sensor
-pycoproc = Pycoproc()
-si = SI7006A20(pycoproc)
+# pycoproc = Pycoproc()
+# si = SI7006A20(pycoproc)
 
 #Main sending loop
 while True:
-    pycom.rgbled(0x000700) #LED green
-    temp = si.temperature()
+    # pycom.rgbled(0x000700) #LED green
+    # temp = si.temperature()
+    temp = 27.96
     encoded_temp = encode.float_to_fixed_point(temp, 5)
-    print("Temperature:", str(temp) + "ºC")
-    print("Sending:", encoded_temp)
+
+    time.sleep(0.5)
+    pycom.rgbled(0x00ff00) #LED green
+    time.sleep(0.5)
+    pycom.rgbled(0)
+    time.sleep(0.5)
+
     s.send(encoded_temp)
-    print("Successfully sent")
-    print()
-    pycom.rgbled(0x000007) #LED blue
+    
+    time.sleep(0.5)
+    pycom.rgbled(0x00ff00) #LED green
+    time.sleep(0.5)
+    pycom.rgbled(0)
+    time.sleep(0.5)
+
     time.sleep(SENDING_INTERVAL)
