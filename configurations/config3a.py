@@ -6,7 +6,7 @@ import machine
 from network import LoRa
 
 
-SENDING_INTERVAL = 10 #Interval at which to send data messages to the server, (seconds)
+SENDING_INTERVAL = 60*5 #Interval at which to send data messages to the server, (seconds)
 
 #Disable LED blink
 pycom.heartbeat(False)

@@ -1,0 +1,2 @@
+Wake up from deepsleep then go back to sleep
+This is a control of sorts to see how much power we can save from attempting to predict the data that should be sent.

@@ -1,6 +1,7 @@
 """
-Config 3: machine.deepsleep
-This config uses machine.deepsleep to go into a deep sleep between sending data
+Config 4: pysense deepsleep
+This config uses the deep sleep from the pycoproc library to have the pysense shield
+    put the lopy into a deep sleep between sending data
 It sends it's temperature data to the server at a specified interval 
 
 LED KEY:
@@ -17,6 +18,7 @@ import pycom
 import machine
 
 from network import LoRa
+from pycoproc import Pycoproc
 
 
 SENDING_INTERVAL = 10 #Interval at which to send data messages to the server, (seconds)
@@ -63,5 +65,7 @@ pycom.rgbled(0)
 time.sleep(0.5)
 
 lora.nvram_save()
-print("Sleeping for {}s".format(SENDING_INTERVAL))
-machine.deepsleep(SENDING_INTERVAL * 1000)
+
+pycp = Pycoproc()
+pycp.setup_sleep(SENDING_INTERVAL)
+pycp.go_to_sleep()

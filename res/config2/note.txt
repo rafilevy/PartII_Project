@@ -1,0 +1,2 @@
+machine.sleep in between sending data.
+The different graphs depend on if setBlocking is true or not
