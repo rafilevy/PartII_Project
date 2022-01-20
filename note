@@ -13,3 +13,7 @@ OTAA vs ABP:
 
     The workaround is to use OTAA to connect when the device is first powered on. It then saves the OTAA credentials in non-volatile
     storage. When it next connects it retreives the credetials so can rejoin the network without performing a handshake again.
+
+Saving to memory
+
+Oscilliscope draws around 1MicroAmp
