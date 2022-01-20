@@ -16,12 +16,13 @@ import ubinascii
 import encode
 import pycom
 import machine
-
 from network import LoRa
+from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
 from pycoproc import Pycoproc
 
+time.sleep(0.5)
 
-SENDING_INTERVAL = 10 #Interval at which to send data messages to the server, (seconds)
+SENDING_INTERVAL = 30 #Interval at which to send data messages to the server, (seconds)
 
 #Disable LED blink
 pycom.heartbeat(False)
@@ -49,23 +50,16 @@ s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 s.setblocking(True)
 
-temp = 23.122
-encoded_temp = encode.float_to_fixed_point(temp, 5)
+pycp = Pycoproc()
 
-pycom.rgbled(0x00ff00) #LED green
-time.sleep(0.5)
-pycom.rgbled(0)
-time.sleep(0.5)
+si = SI7006A20(pycp) #temperature / humiditiy
+temp = si.temperature()
+
+encoded_temp = encode.float_to_fixed_point(temp, 5)
 
 s.send(encoded_temp)
 
-pycom.rgbled(0x00ff00) #LED green
-time.sleep(0.5)
-pycom.rgbled(0)
-time.sleep(0.5)
-
 lora.nvram_save()
 
-pycp = Pycoproc()
 pycp.setup_sleep(SENDING_INTERVAL)
-pycp.go_to_sleep()
+pycp.go_to_sleep(False)

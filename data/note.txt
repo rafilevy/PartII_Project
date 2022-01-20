@@ -1,0 +1,17 @@
+Powered through VIN / GND Pins
+0rh - Config 1
+1 - Config 2
+2 - Config 31
+3 - Config Wake Sleep
+4 - Config Wake Sleep Pycom
+
+Powered through lipo 
+DAT2:
+0 - Config Wake Sleep
+1 - Config Wake Sleep Pycom
+2 - Config 4
+3 - Config 4 with go_to_sleep(False)
+4 - Config 3
+5 - Config 2
+6 - Config 1
+7 - Config Save

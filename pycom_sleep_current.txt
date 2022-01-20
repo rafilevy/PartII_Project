@@ -1,0 +1,19 @@
+Experiments on lopy4 sleep and deep sleep (pycom) currents:
+
+Voltage / Active Current / Deep Sleep Current:
+- 3.3V / 40mA / 0.009mA (Did get down to 0.007 but this wasn't repeatable)
+- 3.4V / 41mA / 0.009mA
+- 3.5V / 41.5mA / 0.009mA
+- 3.7V / 40mA / 0.009mA
+
+For config 4 at 3.3V:
+Normal: 39mA / 0.018mA
+go_to_sleep(False): 39mA / 0.009mA - 0.010mA after some cycles
+
+For config 3 at 3.3V:
+38mA / 4.4mA
+
+For config 2 at 3.3V:
+38mA / 7mA 
+
+For config 1 at 3.3V:

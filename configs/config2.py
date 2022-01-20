@@ -42,26 +42,17 @@ print('\nSuccessfully joined LoRa network.')
 # Create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
+s.setblocking(True)
 
 
 #Main sending loop
 while True:
-    # temp = si.temperature()
+    time.sleep(0.5)
+
     temp = 26.291
     encoded_temp = encode.float_to_fixed_point(temp, 5)
 
-    pycom.rgbled(0x00ff00) #LED green
-    time.sleep(0.2)
-    pycom.rgbled(0)
-    time.sleep(0.2)
-
-    s.setblocking(True)
 
     s.send(encoded_temp)
-
-    time.sleep(0.2)
-    pycom.rgbled(0x00ff00) #LED green
-    time.sleep(0.2)
-    pycom.rgbled(0)
 
     machine.sleep(SENDING_INTERVAL * 1000)
