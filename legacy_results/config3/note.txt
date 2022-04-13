@@ -1,4 +1,0 @@
-machine.deepsleep between sending data
-Saves OTAA credentials and reloads them on wake up
-Initial small spike is memory access for nvram.restore
-Low power usage during sleep

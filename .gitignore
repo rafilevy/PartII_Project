@@ -1,2 +1,4 @@
 sensor_pycom
-pi_server/logs
+logs
+__pycache__
+archive/

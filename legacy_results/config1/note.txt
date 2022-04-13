@@ -1,1 +1,0 @@
-The images show the sequence of waking from idleing, sending a lora message and going back to sleep.

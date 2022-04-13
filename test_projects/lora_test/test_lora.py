@@ -3,31 +3,13 @@ import socket
 import time
 import ubinascii
 
-# Initialise LoRa in LORAWAN mode.
-# Please pick the region that matches where you are using the device:
-# Asia = LoRa.AS923
-# Australia = LoRa.AU915
-# Europe = LoRa.EU868
-# United States = LoRa.US915
-
 print("Creating LoRa instance: LORAWAN / EU868")
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
 print("LoRa instance created for dev_eui: "+ubinascii.hexlify(lora.mac()).decode('utf-8'))
 
-# create an OTAA authentication parameters, change them to the provided credentials
 app_eui = ubinascii.unhexlify('0000000000000000')
 app_key = ubinascii.unhexlify('9BE36B464B60455F8CC3760BAFB46F98')
-#uncomment to use LoRaWAN application provided dev_eui
-#dev_eui = ubinascii.unhexlify('70B3D549938EA1EE')
-
-# Uncomment for US915 / AU915 & Pygate
-# for i in range(0,8):
-#     lora.remove_channel(i)
-# for i in range(16,65):
-#     lora.remove_channel(i)
-# for i in range(66,72):
-#     lora.remove_channel(i)
 
 print("Joining Lora network OTAA with app_eui zeroes and app_key: "+ubinascii.hexlify(app_key).decode('utf-8'))
 # join a network using OTAA (Over the Air Activation)
