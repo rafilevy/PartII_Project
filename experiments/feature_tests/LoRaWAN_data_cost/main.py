@@ -37,7 +37,7 @@ s.setblocking(True)
 
 while True:
     for i in range(10):
-        s.send( bytes([rand_byte for _ in range((i+1) * 10)] ) )
+        s.send( bytes([rand_byte() for _ in range((i+1) * 10)] ) )
 
         #Flash LED green and sleep for .5 seconds either side
         time.sleep(0.5)
