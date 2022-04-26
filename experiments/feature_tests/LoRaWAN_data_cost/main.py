@@ -34,8 +34,8 @@ s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 s.setblocking(False)
 
 while True:
-    for i in range(5):
-        s.send( bytes([rand_byte() for _ in range((i+1) * 100)] ) )
+    for i in range(10):
+        s.send( bytes([rand_byte() for _ in range((i+1) * 25)] ) )
 
         #Flash LED green and sleep for .5 seconds either side
         time.sleep(0.5)
