@@ -5,8 +5,9 @@ import math
 pycom.heartbeat(False)
 
 while True:
-    for i in range(10_000):
-        x = math.sqrt(float(i))
+    i = 0
+    while i < 100_000:
+        i += 1
 
     time.sleep(3) #Sleep for 3 seconds
     
