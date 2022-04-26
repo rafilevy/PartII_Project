@@ -23,12 +23,10 @@ import struct
 
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
-dev_addr = struct.unpack(">l", ubinascii.unhexlify('260B26B8'))[0]
-nwk_swkey = ubinascii.unhexlify('CFD2E8E7A6B86130F896DADE6495CB5D')
+dev_addr = struct.unpack(">l", ubinascii.unhexlify('260BF2DE'))[0]
 app_swkey = ubinascii.unhexlify('FBB6FBD7EC975D517A94CA5268C010C4')
+nwk_swkey = ubinascii.unhexlify('CFD2E8E7A6B86130F896DADE6495CB5D')
 lora.join(activation=LoRa.ABP, auth=(dev_addr, nwk_swkey, app_swkey))
-
-lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
 # Create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
