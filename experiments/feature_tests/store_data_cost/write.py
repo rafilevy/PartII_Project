@@ -4,7 +4,7 @@ from random import randint_32
 
 #Disable LED blink
 pycom.heartbeat(False)
-
+pycom.nvs_erase_all()
 while True:
     for i in range(5):
         for j in range(10*(i+1)):
