@@ -5,11 +5,6 @@ from random import randint_32
 #Disable LED blink
 pycom.heartbeat(False)
 
-for i in range(10):
-    for j in range(10*(i+1)):
-        key = str(i) + "-" + str(j)
-        pycom.nvs_set(key, randint_32())
-
 while True:
     for i in range(10):
         for j in range(10*(i+1)):

@@ -6,13 +6,11 @@ from random import randint_32
 pycom.heartbeat(False)
 
 while True:
-    for i in range(10):
-        #Write loop
+    for i in range(5):
         for j in range(10*(i+1)):
             key = str(i) + "-" + str(j)
             pycom.nvs_set(key, randint_32())
         
-
         #Flash LED green and sleep for .5 seconds either side
         time.sleep(0.5)
         pycom.rgbled(0x007700) 
