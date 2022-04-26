@@ -2,9 +2,9 @@
 
 <!-- Deep sleep current on configuration graphs is not dropping as low as it should. -->
 
-Collect energy cost per byte data for LoRaWAN transmissions.
+<!-- Collect energy cost per byte data for LoRaWAN transmissions. -->
 
-Collect cost of energy saved per byte of data.
+<!-- Collect cost of energy saved per byte of data. -->
 
 Collect graph for batching when it sends data (rather than save it).
 
