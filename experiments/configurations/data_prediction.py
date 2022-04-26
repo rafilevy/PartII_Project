@@ -11,6 +11,7 @@ import time
 import math
 import ubinascii
 import encode
+import struct
 import pycom
 from machine import Timer
 from network import LoRa
@@ -92,10 +93,7 @@ def send_data(x_vals):
         # lora.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
         # while not lora.has_joined():
         #     print("Attempting to join...")
-        #     time.sleep(1)
-
-        lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
-
+        #     time.sleep(1)s
         dev_addr = struct.unpack(">l", ubinascii.unhexlify('260BF2DE'))[0]
         app_swkey = ubinascii.unhexlify('FBB6FBD7EC975D517A94CA5268C010C4')
         nwk_swkey = ubinascii.unhexlify('CFD2E8E7A6B86130F896DADE6495CB5D')
@@ -118,7 +116,10 @@ def send_data(x_vals):
 
 
 z = si.temperature()
-data_head = pycom.nvs_get("TEMP_HEAD")
+try:
+    data_head = pycom.nvs_get("TEMP_HEAD")
+except ValueError as e:
+    data_head = None
 
 if data_head == None:
     #First run, set head to 0, Save initial values and send first data point to server.
