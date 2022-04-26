@@ -8,7 +8,7 @@ pycom.nvs_erase_all()
 while True:
     for i in range(5):
         for j in range(50*(i+1)):
-            key = str(i) + "-" + str(j)
+            key = str(j)
             pycom.nvs_set(key, randint_32())
         
         #Flash LED green and sleep for .5 seconds either side

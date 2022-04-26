@@ -6,9 +6,9 @@ from random import randint_32
 pycom.heartbeat(False)
 
 while True:
-    for i in range(10):
-        for j in range(10*(i+1)):
-            key = str(i) + "-" + str(j)
+    for i in range(5):
+        for j in range(50*(i+1)):
+            key = str(j)
             result = pycom.nvs_get(key)
         
         #Flash LED green and sleep for .5 seconds either side
