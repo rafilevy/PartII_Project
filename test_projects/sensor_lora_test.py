@@ -37,7 +37,6 @@ s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 s.setblocking(True)
 
-
 #Configure the temperature module
 pycoproc = Pycoproc()
 si = SI7006A20(pycoproc)

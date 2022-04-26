@@ -13,10 +13,13 @@ import math
 import ubinascii
 import encode
 import pycom
+from machine import Timer
 from network import LoRa
 from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
 from pycoproc import Pycoproc
 
+chrono = Timer.Chrono()
+chrono.start()
 SENDING_INTERVAL = 30 #Interval at which to send data messages to the server, (seconds)
 
 #Disable LED blink
@@ -58,7 +61,6 @@ def retreive_x_P(key):
     x = encode.fixed_point_to_float(encode.byte_array_from_int(data & 0xffff0000), 5)
     P = encode.fixed_point_to_float(encode.byte_array_from_int(data & 0x0000ffff), 5)
     return x, P
-
 
 
 #Push and pop all data points to non-volatile memory
@@ -144,6 +146,7 @@ else:
         save_x_P("Act_x_P", z, P)
         save_x_P("Pred_x_P", x_, P_)
 
-
-pycp.setup_sleep(SENDING_INTERVAL)
+chrono.stop()
+elapsed = chrono.read()
+pycp.setup_sleep(SENDING_INTERVAL - elapsed)
 pycp.go_to_sleep(False)

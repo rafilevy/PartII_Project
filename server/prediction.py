@@ -1,10 +1,13 @@
+from datetime import datetime, timedelta
 import paho.mqtt.client as mqtt
-import datetime
 from dateutil.parser import isoparse
 import os
 import json
 import lib.encode as encode
 from sys import argv
+from timeloop import Timeloop
+
+tl = Timeloop()
 
 
 if len(argv) == 0:
@@ -12,6 +15,11 @@ if len(argv) == 0:
     exit(1)
 
 OUT_DIR = argv[0]
+
+predictor_a = None
+predictor_b = None
+prev_timestamp = None
+MESSAGE_INTERVAL = 30 #Interval to expect messages it in s
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -22,14 +30,10 @@ def decode_payload(devid, payload):
         if not ("uplink_message" in payload and "decoded_payload" in payload["uplink_message"] and "bytes" in payload["uplink_message"]["decoded_payload"]):
             return
         b = payload["uplink_message"]["decoded_payload"]["bytes"]
-        temperature_bytes = b[:2]
-        humidity_bytes = b[2:3]
-        pressure_bytes = b[3:6]
-        illuminance_bytes = b[6:8]
-        payload["uplink_message"]["decoded_payload"]["temperature"] = encode.fixed_point_to_float(temperature_bytes, 8)
-        payload["uplink_message"]["decoded_payload"]["humidity"] = encode.fixed_point_to_float(humidity_bytes, 1)
-        payload["uplink_message"]["decoded_payload"]["pressure"] = encode.fixed_point_to_float(pressure_bytes, 0)
-        payload["uplink_message"]["decoded_payload"]["illuminance"] = encode.fixed_point_to_float(illuminance_bytes, 0)
+
+        n_data_points = len(b) / 2
+        temps = [encode.fixed_point_to_float(b[i:i+2], 5) for i in range(n_data_points)]
+        payload["uplink_message"]["decoded_payload"]["temperature"] = temps
 
 def on_message(client, userdata, msg):
     devid, msg_type = decode_device(msg.topic)
@@ -38,18 +42,18 @@ def on_message(client, userdata, msg):
 
     data = json.loads(msg.payload)
     d = isoparse(data["received_at"])
-    time_str = d.strftime("%H:%M:%S")
-    date_str = d.strftime("%d-%m-%y")
-    decode_payload(devid, data)
 
-    filepath = OUT_DIR + "/" + devid + "." + date_str + "." + time_str + ".json"
-    i = 0
-    while os.path.isfile(filepath):
-        filepath = OUT_DIR + "/" + devid + "." + date_str + "." + time_str + i + ".json"
-        i += 1
-    
-    with open(filepath, "w") as f:
-        json.dump(data, f)
+    global prev_timestamp
+    prev_timestamp = d
+
+    decode_payload(devid, data)
+    global predictor_a, predictor_b
+    temps = data["uplink_message"]["decoded_payload"]["temperature"]
+    if predictor_a == None:
+        predictor_a = Predictor(temps[-1], 1.)
+        predictor_b = Predictor(temps[-1], 1.)
+
+    process_temp_data(temps)
 
 def decode_device(topic):
     parts = topic.split("/")
@@ -58,6 +62,44 @@ def decode_device(topic):
     else:
         return None, None
 
+def process_temp_data(data):
+    print(datetime.now().strftime("%d-%m-%y %H:%M:%S"), data)
+
+class Predictor:
+    def __init__(self, x_0, P_0, Q=0., R=1., error_threshold=0.05, ):
+        self.Q = Q
+        self.R = R
+        self.threshold = error_threshold
+        
+        self.x = x_0
+        self.P = P_0
+
+    def predict(self):
+        x = self.x
+        self.P = self.P + self.Q
+        return self.x
+    
+    def update(self, z):
+        KG = self.P/(self.P + self.R)
+        self.P = self.P * (1 - KG)
+        self.x = self.x + KG*(z - self.x)
+        return self.x
+
+    def clone(self):
+        return Predictor(self.x, self.p, self.Q, self.R, self.threshold)
+
+@tl.job(interval=timedelta(seconds=MESSAGE_INTERVAL))
+def predict_messages():
+    global prev_timestamp, predictor_a
+    current_ts = datetime.now()
+    if (prev_timestamp == None or predictor_a == None):
+        return
+    
+    dt = current_ts - prev_timestamp
+    if (dt.seconds > MESSAGE_INTERVAL):
+        x = predictor_a.predict()
+        process_temp_data(x)
+        
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
@@ -66,3 +108,4 @@ client.username_pw_set("part-ii-project@ttn", "NNSXS.3VHGS2ILBQ6V2TWX27KLKS4NYK7
 client.connect("eu1.cloud.thethings.network")
 
 client.loop_forever()
+

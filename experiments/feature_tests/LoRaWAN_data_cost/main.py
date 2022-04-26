@@ -33,7 +33,7 @@ lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 # Create a LoRa socket
 s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
-s.setblocking(True)
+s.setblocking(False)
 
 while True:
     for i in range(10):
