@@ -7,7 +7,7 @@ pycom.heartbeat(False)
 pycom.nvs_erase_all()
 while True:
     for i in range(5):
-        for j in range(20*(i+1)):
+        for j in range(50*(i+1)):
             key = str(i) + "-" + str(j)
             pycom.nvs_set(key, randint_32())
         
