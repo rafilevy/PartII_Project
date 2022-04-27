@@ -6,6 +6,7 @@ from random import randint_32
 pycom.heartbeat(False)
 
 while True:
+    time.sleep(5)
     for i in range(5):
         for j in range(50*(i+1)):
             key = str(j)

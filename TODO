@@ -5,6 +5,7 @@
 <!-- Collect cost of energy saved per byte of data. -->
 
 !!! Deep sleep current on configuration graphs is not dropping as low as it should. !!!
+-- Oscilloscope doesn't range that low, picture of the voltmeter.
 
 Recollect read and write graph with an initial delay.
 
