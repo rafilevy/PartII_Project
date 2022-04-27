@@ -9,7 +9,6 @@ from timeloop import Timeloop
 
 tl = Timeloop()
 
-
 if len(argv) == 0:
     print("Please specify the output directory as the first argument")
     exit(1)
