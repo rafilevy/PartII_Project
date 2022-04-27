@@ -7,7 +7,6 @@ If a prediction fails the device will retreive all the batched data from storage
 """
 
 import socket
-import time
 import math
 import ubinascii
 import encode
@@ -44,7 +43,6 @@ def k_update(z, x, P, R):
     x_ = x + KG*(z - x)
     return x_, P_
 
-
 #Save and retreive Kalman filter params from non-volatile storage
 def save_x_P(key, x, P):
     x = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, max_size=2))
@@ -62,7 +60,6 @@ def retreive_x_P(key):
     P = encode.fixed_point_to_float(encode.byte_array_from_int(data & 0x0000ffff), 5)
     return x, P
 
-
 #Push and pop all data points to non-volatile memory
 def push_x_val(key, data_head, x):
     data = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, max_size=2))
@@ -78,7 +75,6 @@ def pop_x_vals(key, data_head):
         pycom.nvs_clear(key + "_INDEX_" + str(i))
     pycom.nvs_set(key + "_HEAD", 0)
     return x_vals
-
 
 #Send data points over LoRaWAN
 def send_data(x_vals):
@@ -106,7 +102,6 @@ def send_data(x_vals):
     s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
     s.setblocking(True)
 
-    
     data = bytes()
     for x in x_vals:
         data += encode.float_to_fixed_point(x, 5, max_size=2, min_size=2)
@@ -116,10 +111,14 @@ def send_data(x_vals):
 
 
 z = si.temperature()
+print("Temperature read {:0.3f}".format(z))
+
 try:
     data_head = pycom.nvs_get("TEMP_HEAD")
 except ValueError as e:
     data_head = None
+
+print("Data head = {}".format(data_head))
 
 if data_head == None:
     #First run, set head to 0, Save initial values and send first data point to server.
@@ -155,5 +154,6 @@ else:
 
 chrono.stop()
 elapsed = chrono.read()
+print("Sleeping for {}s".format(SENDING_INTERVAL - elapsed))
 pycp.setup_sleep(SENDING_INTERVAL - elapsed)
 pycp.go_to_sleep(False)
