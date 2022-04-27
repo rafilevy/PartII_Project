@@ -16,4 +16,4 @@ def byte_array_to_int(b):
     return int.from_bytes(b, "little")
     
 def int_to_byte_array(a, n_bytes):
-    return a.to_bytes(n_bytes)    
+    return a.to_bytes(n_bytes, "little")    
