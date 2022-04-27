@@ -48,7 +48,7 @@ def save_x_P(key, x, P):
     x = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, max_size=2))
     P = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, max_size=2))
 
-    data = (x & 0xffff0000) | (P & 0x0000ffff)
+    data = ((x & 0xffff) << 16) | (P & 0x0000ffff)
     pycom.nvs_set(key, data)
 
 def retreive_x_P(key):
@@ -56,8 +56,8 @@ def retreive_x_P(key):
     if data == None:
         return None, None
     
-    x = encode.fixed_point_to_float(encode.int_to_byte_array(data & 0xffff0000), 5)
-    P = encode.fixed_point_to_float(encode.int_to_byte_array(data & 0x0000ffff), 5)
+    x = encode.fixed_point_to_float(encode.int_to_byte_array((data & 0xffff0000) >> 16, 2), 5)
+    P = encode.fixed_point_to_float(encode.int_to_byte_array(data & 0x0000ffff, 2), 5)
     return x, P
 
 #Push and pop all data points to non-volatile memory
