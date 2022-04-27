@@ -1,3 +1,4 @@
+from curses.ascii import NUL
 from datetime import datetime, timedelta
 import paho.mqtt.client as mqtt
 from dateutil.parser import isoparse
@@ -18,36 +19,40 @@ OUT_DIR = argv[0]
 predictor_a = None
 predictor_b = None
 prev_timestamp = None
-MESSAGE_INTERVAL = 30 #Interval to expect messages it in s
+MESSAGE_INTERVAL = 10 #Interval to expect messages at in s
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
     client.subscribe("#")
 
 def decode_payload(devid, payload):
-    if devid == "rl630-lopy4-d68a88":
+    if devid == "rl630-lopy4-abp":
         if not ("uplink_message" in payload and "decoded_payload" in payload["uplink_message"] and "bytes" in payload["uplink_message"]["decoded_payload"]):
-            return
+            return None
         b = payload["uplink_message"]["decoded_payload"]["bytes"]
-
-        n_data_points = len(b) / 2
-        temps = [encode.fixed_point_to_float(b[i:i+2], 5) for i in range(n_data_points)]
-        payload["uplink_message"]["decoded_payload"]["temperature"] = temps
+        n_data_points = int(len(b) / 2)
+        print(b)
+        temps = [encode.fixed_point_to_float(b[2*i:2*(i+1)], 5) for i in range(n_data_points)]
+        return {"temperature": temps}
 
 def on_message(client, userdata, msg):
     devid, msg_type = decode_device(msg.topic)
-    if (msg_type != "up"):
+    print("Message from:", devid)
+    if (msg_type != "up" or devid != "rl630-lopy4-abp"):
         return
 
     data = json.loads(msg.payload)
-    d = isoparse(data["received_at"])
 
+    d = isoparse(data["received_at"])
+    d = d.replace(tzinfo=None)
     global prev_timestamp
     prev_timestamp = d
 
-    decode_payload(devid, data)
+    decoded_data = decode_payload(devid, data)
     global predictor_a, predictor_b
-    temps = data["uplink_message"]["decoded_payload"]["temperature"]
+    if decoded_data == None:
+        return
+    temps = decoded_data["temperature"]
     if predictor_a == None:
         predictor_a = Predictor(temps[-1], 1.)
         predictor_b = Predictor(temps[-1], 1.)
@@ -62,7 +67,15 @@ def decode_device(topic):
         return None, None
 
 def process_temp_data(data):
-    print(datetime.now().strftime("%d-%m-%y %H:%M:%S"), data)
+    global predictor_a, predictor_b
+    if predictor_b != None:
+        for d in data:
+            predictor_b.update(d)
+        predictor_a = predictor_b.clone()
+    print("Measured",datetime.now().strftime("%d-%m-%y %H:%M:%S"), data)
+
+def process_pred_temp_data(data):
+    print("Prediction", datetime.now().strftime("%d-%m-%y %H:%M:%S"), data)
 
 class Predictor:
     def __init__(self, x_0, P_0, Q=0., R=1., error_threshold=0.05, ):
@@ -85,7 +98,7 @@ class Predictor:
         return self.x
 
     def clone(self):
-        return Predictor(self.x, self.p, self.Q, self.R, self.threshold)
+        return Predictor(self.x, self.P, self.Q, self.R, self.threshold)
 
 @tl.job(interval=timedelta(seconds=MESSAGE_INTERVAL))
 def predict_messages():
@@ -95,16 +108,15 @@ def predict_messages():
         return
     
     dt = current_ts - prev_timestamp
-    if (dt.seconds > MESSAGE_INTERVAL):
+    if dt.seconds > MESSAGE_INTERVAL:
         x = predictor_a.predict()
-        process_temp_data(x)
-        
+        process_pred_temp_data(x)
+
+tl.start()
+
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-
 client.username_pw_set("part-ii-project@ttn", "NNSXS.3VHGS2ILBQ6V2TWX27KLKS4NYK7JJCNPROMPQJY.VVHZBB2QLPJRZDFPM3WF74BERMCRJW27YDTMJJZFGHQKTJLUOKYQ")
 client.connect("eu1.cloud.thethings.network")
-
 client.loop_forever()
-

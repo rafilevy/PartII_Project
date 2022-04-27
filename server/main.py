@@ -33,7 +33,7 @@ def decode_payload(devid, payload):
 
 def on_message(client, userdata, msg):
     devid, msg_type = decode_device(msg.topic)
-    print("Message from", devid)
+    print("Message from:", devid)
     if (msg_type != "up" or devid != "rl630-lopy4-abp"):
         return
 
