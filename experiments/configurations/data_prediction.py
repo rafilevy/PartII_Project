@@ -106,7 +106,9 @@ def send_data(x_vals):
     for x in x_vals:
         data += encode.float_to_fixed_point(x, 5, max_size=2, min_size=2)
 
+    print(data)
     s.send(data)
+    s.setblocking(False)
     lora.nvram_save() #Save LoRaWAN OTAA session keys
 
 
