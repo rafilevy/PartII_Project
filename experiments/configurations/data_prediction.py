@@ -56,8 +56,8 @@ def retreive_x_P(key):
     if data == None:
         return None, None
     
-    x = encode.fixed_point_to_float(encode.byte_array_from_int(data & 0xffff0000), 5)
-    P = encode.fixed_point_to_float(encode.byte_array_from_int(data & 0x0000ffff), 5)
+    x = encode.fixed_point_to_float(encode.int_to_byte_array(data & 0xffff0000), 5)
+    P = encode.fixed_point_to_float(encode.int_to_byte_array(data & 0x0000ffff), 5)
     return x, P
 
 #Push and pop all data points to non-volatile memory
