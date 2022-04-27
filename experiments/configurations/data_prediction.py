@@ -12,6 +12,7 @@ import ubinascii
 import encode
 import struct
 import pycom
+import machine
 from machine import Timer
 from network import LoRa
 from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
@@ -19,7 +20,7 @@ from pycoproc import Pycoproc
 
 chrono = Timer.Chrono()
 chrono.start()
-SENDING_INTERVAL = 30 #Interval at which to send data messages to the server, (seconds)
+SENDING_INTERVAL = 10 #Interval at which to send data messages to the server, (seconds)
 
 #Disable LED blink
 pycom.heartbeat(False)
@@ -62,7 +63,7 @@ def retreive_x_P(key):
 
 #Push and pop all data points to non-volatile memory
 def push_x_val(key, data_head, x):
-    data = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, max_size=2))
+    data = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, min_size=2, max_size=2))
     pycom.nvs_set(key + "_INDEX_" + str(data_head), data)
     pycom.nvs_set(key + "_HEAD", data_head+1)
 
@@ -70,9 +71,9 @@ def pop_x_vals(key, data_head):
     x_vals = []
     for i in range(data_head):
         data = pycom.nvs_get(key + "_INDEX_" + str(i))
-        x = encode.fixed_point_to_float(encode.int_to_byte_array(data), 5)
+        x = encode.fixed_point_to_float(encode.int_to_byte_array(data, 2), 5)
         x_vals.append(x)
-        pycom.nvs_clear(key + "_INDEX_" + str(i))
+        pycom.nvs_erase(key + "_INDEX_" + str(i))
     pycom.nvs_set(key + "_HEAD", 0)
     return x_vals
 
@@ -91,14 +92,13 @@ def send_data(x_vals):
 
     data = bytes()
     for x in x_vals:
-        data += encode.float_to_fixed_point(x, 5, max_size=2, min_size=2)
+        data += encode.float_to_fixed_point(x, 5, min_size=2, max_size=2)
 
-    print(data)
+    print("Sending {}|{}".format(x_vals, data))
     s.send(data)
     s.setblocking(False)
 
 z = si.temperature()
-print("Temperature read {:0.3f}".format(z))
 
 try:
     data_head = pycom.nvs_get("TEMP_HEAD")
@@ -112,6 +112,7 @@ if data_head == None:
     pycom.nvs_set("TEMP_HEAD", 0)
     save_x_P("Act_x_P", z, 1.)
     save_x_P("Pred_x_P", z, 1.)
+    print("Sending value: {}".format(z))
     send_data([z])
 else:
     Act_x, Act_P = retreive_x_P("Act_x_P")
@@ -121,9 +122,15 @@ else:
     x_, P_ = k_predict(Pred_x, Pred_P, Q) #Prediction made using predicted data values
     e_measurement = math.fabs(x_ - z)
     e_cumulative  = math.fabs(x_ - x)
+
+
+    print("z = {}".format(z))
+    print("x_ = {}".format(x_))
     if e_measurement > threshold or e_cumulative > threshold:
+        print("Error threshold crossed.")
         #Error threshold was hit, pop all previous data values and send to server
         data = pop_x_vals("TEMP", data_head)
+        data.append(z)
         send_data(data)
         #Update both predicted and actual models with all the actual data values
         _, P = k_update(z, Act_x, Act_P, R)
@@ -140,7 +147,7 @@ else:
         save_x_P("Pred_x_P", x_, P_)
 
 chrono.stop()
-elapsed = chrono.read()
+elapsed = chrono.read() + 1 #1 accounts for about 1s of wakeup time.
 print("Sleeping for {}s".format(SENDING_INTERVAL - elapsed))
 pycp.setup_sleep(SENDING_INTERVAL - elapsed)
 pycp.go_to_sleep(False)
