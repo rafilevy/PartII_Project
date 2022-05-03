@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Power Usage</title>
+    <script src="https://cdn.plot.ly/plotly-2.11.1.min.js"></script>
+</head>
+
+<body>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #plot {
+            width: 100%;
+            height: 60%;
+        }
+
+        .sliders {
+            padding: 0 3.5%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sliders>div {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+    </style>
+    <div id="plot">
+    </div>
+    <div class="sliders">
+        <div>
+            <label>Message size (Bytes): </label>
+            <input type="range" step="1" min="1" max="20" value="4" oninput="onSlider('B_s', this.value)">
+            <span id="B_s-value">4</span>
+        </div>
+        <div>
+            <label>RX1 delay (s): </label>
+            <input type="range" step="0.1" min="0.1" max="10" value="5" oninput="onSlider('t_rx1', this.value)">
+            <span id="t_rx1-value">5</span>
+        </div>
+        <div>
+            <label>Batch size: </label>
+            <input type="range" step="1" min="1" max="100" value="8" oninput="onSlider('N', this.value)">
+            <span id="N-value">8</span>
+        </div>
+    </div>
+    <script>
+        function E_send(n) {
+            return (6.056e-4) * n + 0.0159;
+        }
+        function t_send(n) {
+            return 0.0015 * n + 0.05;
+        }
+        function E_read(n) {
+            return (1.68e-4) * n - 0.001;
+        }
+        function t_read(n) {
+            return (8.17e-4) * n + 0.013;
+        }
+        function E_write(n) {
+            return (3.04e-4) * n - 0.01;
+        }
+        function t_write(n) {
+            return (0.00142) * n - 0.028;
+        }
+
+        function E_default(B_s, t_rx1) {
+            return 1.504 + E_send(B_s) + (0.132 * t_rx1);
+        }
+        function t_default(B_s, t_rx1) {
+            return 8.37 + t_send(B_s) + t_rx1;
+        }
+        function P_default(I_m, B_s, t_rx1) {
+            return (E_default(B_s, t_rx1) + 0.0264 * (I_m - t_default(B_s, t_rx1))) / I_m;
+        }
+
+        function E_batching_batch(B_s) {
+            return 1.148 + E_write(B_s);
+        }
+        function t_batching_batch(B_s) {
+            return 6.278 + t_write(B_s);
+        }
+        function E_batching_send(B_s, t_rx1, N) {
+            return 1.415 + E_read(B_s * (N - 1)) + E_send(B_s * N) + (0.132 * t_rx1);
+        }
+        function t_batching_send(B_s, t_rx1, N) {
+            return 8.271 + t_read(B_s * (N - 1)) + t_send(B_s * N) + t_rx1;
+        }
+        function P_batching(I_m, B_s, t_rx1, N) {
+            return (((N - 1) * E_batching_batch(B_s))
+                + E_batching_send(B_s, t_rx1, N)
+                + (0.0264 * (
+                    ((N - 1) * (I_m - t_batching_batch(B_s))) +
+                    (I_m - t_batching_send(B_s, t_rx1, N))
+                )))
+                / (N * I_m)
+        }
+        const xs = [];
+        for (let i = 10; i <= 60 * 60; i += 5) xs.push(i);
+
+        let B_s = 10;
+        let t_rx1 = 5;
+        let N = 8;
+        const plotTraces = ((update = true) => {
+            console.log(B_s);
+            console.log(t_rx1);
+            console.log(N);
+
+            const default_ys = [];
+            const batching_ys = [];
+            for (let i = 0; i < xs.length; i++) {
+                const x = xs[i];
+                default_ys[i] = P_default(x, B_s, t_rx1) * 1000;
+                batching_ys[i] = P_batching(x, B_s, t_rx1, N) * 1000;
+            }
+
+            const trace1 = {
+                x: xs,
+                y: default_ys,
+
+                name: "Default configuration",
+                type: "scatter"
+            }
+            const trace2 = {
+                x: xs,
+                y: batching_ys,
+                name: "Batching configuration",
+                type: "scatter"
+            }
+            const layout = {
+                title: "Power consumption (W) vs device sending interval (s)",
+                xaxis: {
+                    title: "Sending interval (s)",
+                    uirevision: "time"
+                },
+                yaxis: {
+                    title: "Power (mW)",
+                    uirevision: "time"
+                },
+            }
+            if (update) {
+                Plotly.react("plot", [trace1, trace2], layout)
+            } else {
+                Plotly.newPlot("plot", [trace1, trace2], layout)
+            }
+        })
+        plotTraces(false);
+
+        function onSlider(name, value) {
+            const N_display = document.querySelector("#N-value");
+            const t_rx1_display = document.querySelector("#t_rx1-value");
+            const B_s_display = document.querySelector("#B_s-value");
+            if (name === "N") {
+                N_display.textContent = value;
+                N = Number.parseInt(value);
+            } else if (name === "t_rx1") {
+                t_rx1_display.textContent = value;
+                t_rx1 = Number.parseFloat(value);
+            } else if (name === "B_s") {
+                B_s_display.textContent = value;
+                B_s = Number.parseInt(value);
+            }
+            plotTraces();
+        }
+    </script>
+</body>
+
+</html>
