@@ -23,10 +23,24 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 
-df = pd.DataFrame()
-df["n_bytes"] = np.linspace(20, 200, 10)
-df["energy"] = np.array([0.028, 0.041, 0.061, 0.068, 0.074, 0.092, 0.105, 0.115, 0.131, 0.137])
-fig = px.line(df, x="n_bytes", y="energy")
-fig.update_xaxes( title_text="Data sent (B)")
-fig.update_yaxes( title_text="Energy consumed (J)")
-fig.show()
+data_write = [(0.015545600000000014, -4.784, -4.528, 0.2560000000000002),
+(0.03453439999999999, -3.056, -2.512, 0.544),
+(0.05162240000000001, -1.024, -0.208, 0.8160000000000001),
+(0.07295360000000001, 1.264, 2.4, 1.136),
+(0.08915200000000002, 3.888, 5.28, 1.3920000000000003)]
+
+data_read = [(0.010400000000000008, 2.944, 3.12, 0.17600000000000016),
+(0.020403200000000014, 4.608, 4.944, 0.3360000000000003),
+(0.030969599999999972, 6.416, 6.928, 0.5119999999999996),
+(0.04158719999999993, 8.384, 9.072, 0.6879999999999988),
+(0.051152, 10.56, 11.39, 0.8300000000000001)
+]
+
+# df = pd.DataFrame()
+# df["n_bytes"] = np.array([200,400,600,800,1000])
+# df["read"] = [d[0]*3.3 for d in data_read] 
+# df["write"] = [d[0]*3.3 for d in data_write] 
+# fig = px.line(df, x="n_bytes", y=["read", "write"])
+# fig.update_xaxes( title_text="Data sent (B)")
+# fig.update_yaxes( title_text="Energy consumed (J)")
+# fig.show()
