@@ -13,4 +13,4 @@ time.sleep(0.5)
 
 pycp = Pycoproc()
 pycp.setup_sleep(30)
-pycp.go_to_sleep(pycom_module_off=True,wake_interrupt=True)
+pycp.go_to_sleep(pycom_module_off=True)
