@@ -19,7 +19,7 @@ OUT_DIR = argv[0]
 predictor_a = None
 predictor_b = None
 prev_timestamp = None
-MESSAGE_INTERVAL = 10 #Interval to expect messages at in s
+MESSAGE_INTERVAL = 30 #Interval to expect messages at in s
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -115,8 +115,8 @@ def predict_messages():
 tl.start()
 
 client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
+client.on_connect = on_connect #Set the callback for a succesfull connection
+client.on_message = on_message #Set the callback messages are passed to
 client.username_pw_set("part-ii-project@ttn", "NNSXS.3VHGS2ILBQ6V2TWX27KLKS4NYK7JJCNPROMPQJY.VVHZBB2QLPJRZDFPM3WF74BERMCRJW27YDTMJJZFGHQKTJLUOKYQ")
 client.connect("eu1.cloud.thethings.network")
 client.loop_forever()

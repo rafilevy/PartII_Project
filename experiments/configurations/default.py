@@ -1,28 +1,18 @@
-"""
-Config 4: pysense deepsleep
-This config uses the deep sleep from the pycoproc library to have the pysense shield
-    put the lopy into a deep sleep between sending data
-It sends it's temperature data to the server at a specified interval 
-
-LED KEY:
-    RED - Connecting to LORA
-    OFF - Sleeping
-    GREEN - Sending data
-"""
-
 import socket
 import time
 import ubinascii
 import encode
 import pycom
-import machine
+from machine import Timer
 from network import LoRa
 from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
 from pycoproc import Pycoproc
 
-time.sleep(0.5)
+#Start timer
+chrono = Timer.Chrono()
+chrono.start()
 
-SENDING_INTERVAL = 30 #Interval at which to send data messages to the server, (seconds)
+MESSAGE_INTERVAl = 30 #Interval at which to send data messages to the server, (seconds)
 
 #Disable LED blink
 pycom.heartbeat(False)
@@ -61,5 +51,7 @@ s.send(encoded_temp)
 
 lora.nvram_save()
 
-pycp.setup_sleep(SENDING_INTERVAL)
+chrono.stop()
+elapsed = chrono.read() + 1 #1 accounts for about 1s of wakeup time.
+pycp.setup_sleep(MESSAGE_INTERVAl)
 pycp.go_to_sleep(False)

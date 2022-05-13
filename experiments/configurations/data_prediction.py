@@ -12,17 +12,17 @@ import ubinascii
 import encode
 import struct
 import pycom
-import machine
 from machine import Timer
 from network import LoRa
 from SI7006A20 import SI7006A20 #Temperature/Humidity sensor
 from pycoproc import Pycoproc
 
+#Begin timer
 chrono = Timer.Chrono()
 chrono.start()
-SENDING_INTERVAL = 10 #Interval at which to send data messages to the server, (seconds)
 
-#Disable LED blink
+MESSAGE_INTERVAL = 30 #Interval at which to send data messages to the server, (seconds)
+
 pycom.heartbeat(False)
 
 pycp = Pycoproc()
@@ -98,6 +98,7 @@ def send_data(x_vals):
     s.send(data)
     s.setblocking(False)
 
+#Take a temperature measurement
 z = si.temperature()
 
 try:
@@ -146,8 +147,9 @@ else:
         save_x_P("Act_x_P", z, P)
         save_x_P("Pred_x_P", x_, P_)
 
+#Calculate sleep time and enter deep sleep
 chrono.stop()
 elapsed = chrono.read() + 1 #1 accounts for about 1s of wakeup time.
-print("Sleeping for {}s".format(SENDING_INTERVAL - elapsed))
-pycp.setup_sleep(SENDING_INTERVAL - elapsed)
+print("Sleeping for {}s".format(MESSAGE_INTERVAL - elapsed))
+pycp.setup_sleep(MESSAGE_INTERVAL - elapsed)
 pycp.go_to_sleep(False)
