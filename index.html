@@ -86,7 +86,7 @@
             return 8.37 + t_send(B_s) + t_rx1;
         }
         function P_default(I_m, B_s, t_rx1) {
-            return (E_default(B_s, t_rx1) + 0.0264 * (I_m - t_default(B_s, t_rx1))) / I_m;
+            return (E_default(B_s, t_rx1) + 2.64e-5 * (I_m - t_default(B_s, t_rx1))) / I_m;
         }
 
         function E_batching_batch(B_s) {
@@ -104,7 +104,7 @@
         function P_batching(I_m, B_s, t_rx1, N) {
             return (((N - 1) * E_batching_batch(B_s))
                 + E_batching_send(B_s, t_rx1, N)
-                + (0.0264 * (
+                + (2.64e-5 * (
                     ((N - 1) * (I_m - t_batching_batch(B_s))) +
                     (I_m - t_batching_send(B_s, t_rx1, N))
                 )))
@@ -125,10 +125,9 @@
         }
         function P_prediction(I_m, B_s, t_rx1, A_p) {
             const A_s = 1 / (1 - A_p);
-            console.log(A_s);
             return (((A_s - 1) * E_prediction_correct())
                 + E_prediction_incorrect(B_s, t_rx1, A_s)
-                + (0.0264 * (
+                + (2.64e-5 * (
                     ((A_s - 1) * (I_m - t_prediction_correct())) +
                     (I_m - t_prediction_incorrect(B_s, t_rx1, A_s))
                 )))
