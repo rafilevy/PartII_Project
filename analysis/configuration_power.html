@@ -53,6 +53,11 @@
             <input type="range" step="1" min="1" max="100" value="8" oninput="onSlider('N', this.value)">
             <span id="N-value">8</span>
         </div>
+        <div>
+            <label>Prediction algorithm acurracy: </label>
+            <input type="range" step="1" min="0" max="100" value="80" oninput="onSlider('A_p', this.value)">
+            <span id="A_p-value">80</span>
+        </div>
     </div>
     <script>
         function E_send(n) {
@@ -105,23 +110,48 @@
                 )))
                 / (N * I_m)
         }
+
+        function E_prediction_correct() {
+            return 1.099;
+        }
+        function t_prediction_correct() {
+            return 6.3;
+        }
+        function E_prediction_incorrect(B_s, t_rx1, A_s) {
+            return 1.373 + E_read(B_s * (A_s - 1)) + E_send(B_s * A_s) + (0.132 * t_rx1);
+        }
+        function t_prediction_incorrect(B_s, t_rx1, A_s) {
+            return 8.192 + t_read(B_s * (A_s - 1)) + t_send(B_s * A_s) + t_rx1;
+        }
+        function P_prediction(I_m, B_s, t_rx1, A_p) {
+            const A_s = 1 / (1 - A_p);
+            console.log(A_s);
+            return (((A_s - 1) * E_prediction_correct())
+                + E_prediction_incorrect(B_s, t_rx1, A_s)
+                + (0.0264 * (
+                    ((A_s - 1) * (I_m - t_prediction_correct())) +
+                    (I_m - t_prediction_incorrect(B_s, t_rx1, A_s))
+                )))
+                / (A_s * I_m)
+        }
+
+
         const xs = [];
         for (let i = 10; i <= 60 * 60; i += 5) xs.push(i);
 
         let B_s = 10;
         let t_rx1 = 5;
         let N = 8;
+        let A_p = 80;
         const plotTraces = ((update = true) => {
-            console.log(B_s);
-            console.log(t_rx1);
-            console.log(N);
-
             const default_ys = [];
             const batching_ys = [];
+            const prediction_ys = [];
             for (let i = 0; i < xs.length; i++) {
                 const x = xs[i];
                 default_ys[i] = P_default(x, B_s, t_rx1) * 1000;
                 batching_ys[i] = P_batching(x, B_s, t_rx1, N) * 1000;
+                prediction_ys[i] = P_prediction(x, B_s, t_rx1, A_p / 100) * 1000;
             }
 
             const trace1 = {
@@ -137,11 +167,19 @@
                 name: "Batching configuration",
                 type: "scatter"
             }
+            const trace3 = {
+                x: xs,
+                y: prediction_ys,
+                name: "Prediction configuration",
+                type: "scatter"
+            }
             const layout = {
-                title: "Power consumption (W) vs device sending interval (s)",
+                title: "Power consumption (W) vs device message interval (s)",
                 xaxis: {
-                    title: "Sending interval (s)",
-                    uirevision: "time"
+                    title: "Message interval (s)",
+                    uirevision: "time",
+                    dtick: 30,
+                    range: [10, 300]
                 },
                 yaxis: {
                     title: "Power (mW)",
@@ -149,9 +187,9 @@
                 },
             }
             if (update) {
-                Plotly.react("plot", [trace1, trace2], layout)
+                Plotly.react("plot", [trace1, trace2, trace3], layout)
             } else {
-                Plotly.newPlot("plot", [trace1, trace2], layout)
+                Plotly.newPlot("plot", [trace1, trace2, trace3], layout)
             }
         })
         plotTraces(false);
@@ -160,6 +198,7 @@
             const N_display = document.querySelector("#N-value");
             const t_rx1_display = document.querySelector("#t_rx1-value");
             const B_s_display = document.querySelector("#B_s-value");
+            const A_p_display = document.querySelector("#A_p-value");
             if (name === "N") {
                 N_display.textContent = value;
                 N = Number.parseInt(value);
@@ -169,6 +208,9 @@
             } else if (name === "B_s") {
                 B_s_display.textContent = value;
                 B_s = Number.parseInt(value);
+            } else if (name === "A_p") {
+                A_p_display.textContent = value;
+                A_p = Number.parseInt(value);
             }
             plotTraces();
         }

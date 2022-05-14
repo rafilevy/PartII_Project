@@ -22,19 +22,12 @@ def find_peak(df: pd.DataFrame, x_0, x_1, threshold_0, threshold_1):
 
     return (peak_x0, peak_x1)
 
-def area_under_graph(df: pd.DataFrame, x_0, x_1, x_col=None ):
-    if x_col != None:
-        df_ = df[(df[x_col] >= x_0) & (df[x_col] <= x_1)]
-        x_0 = df_.index[0]
-        x_1 = df_.index[-1]
-    else:
-        df_ = df.loc[x_0: x_1 + 1]
-    dts = df_["TIME"].diff()
-    ch_1_shifted = df_["CH1"].shift()
-    areas = dts * (ch_1_shifted + ((df_["CH1"] - ch_1_shifted)/2))
-    time_0 = df_.loc[x_0, "TIME"]
-    time_1 = df_.loc[x_1, "TIME"]
-    return (np.sum(areas), time_0, time_1, time_1 - time_0)
+def area_under_graph(df: pd.DataFrame, x_0, x_1, x_col, y_col ):
+    df_ = df[(df[x_col] >= x_0) & (df[x_col] <= x_1)]
+    dts = df_[x_col].diff()
+    ch_1_shifted = df_[y_col].shift()
+    areas = dts * (ch_1_shifted + ((df_[y_col] - ch_1_shifted)/2))
+    return np.sum(areas)
 
 if __name__ == "__main__":
     if len(argv) > 1:

@@ -124,7 +124,6 @@ else:
     e_measurement = math.fabs(x_ - z)
     e_cumulative  = math.fabs(x_ - x)
 
-
     print("z = {}".format(z))
     print("x_ = {}".format(x_))
     if e_measurement > threshold or e_cumulative > threshold:
