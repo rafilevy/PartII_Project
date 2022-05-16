@@ -10,7 +10,7 @@ import socket
 import math
 import ubinascii
 import encode
-import struct
+import ustruct
 import pycom
 from machine import Timer
 from network import LoRa
@@ -46,32 +46,33 @@ def k_update(z, x, P, R):
 
 #Save and retreive Kalman filter params from non-volatile storage
 def save_x_P(key, x, P):
-    x = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, max_size=2))
-    P = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, max_size=2))
-
-    data = ((x & 0xffff) << 16) | (P & 0x0000ffff)
-    pycom.nvs_set(key, data)
+    x_enc = encode.float_to_int(x)
+    P_enc = encode.float_to_int(P)
+    pycom.nvs_set(key + "_x", x_enc)
+    pycom.nvs_set(key + "_P", P_enc)
 
 def retreive_x_P(key):
-    data = pycom.nvs_get(key)
-    if data == None:
+    try:
+        x_bytes = pycom.nvs_get(key + "_x")
+        P_bytes = pycom.nvs_get(key + "_P")
+    except ValueError as e:
         return None, None
     
-    x = encode.fixed_point_to_float(encode.int_to_byte_array((data & 0xffff0000) >> 16, 2), 5)
-    P = encode.fixed_point_to_float(encode.int_to_byte_array(data & 0x0000ffff, 2), 5)
+    x = encode.int_to_float(x_bytes)
+    P = encode.int_to_float(P_bytes)
     return x, P
 
 #Push and pop all data points to non-volatile memory
 def push_x_val(key, data_head, x):
-    data = encode.byte_array_to_int(encode.float_to_fixed_point(x, 5, min_size=2, max_size=2))
-    pycom.nvs_set(key + "_INDEX_" + str(data_head), data)
+    x_enc = encode.float_to_int(x)
+    pycom.nvs_set(key + "_INDEX_" + str(data_head), x_enc)
     pycom.nvs_set(key + "_HEAD", data_head+1)
 
 def pop_x_vals(key, data_head):
     x_vals = []
     for i in range(data_head):
-        data = pycom.nvs_get(key + "_INDEX_" + str(i))
-        x = encode.fixed_point_to_float(encode.int_to_byte_array(data, 2), 5)
+        x_enc = pycom.nvs_get(key + "_INDEX_" + str(i))
+        x = encode.int_to_float(x_enc)
         x_vals.append(x)
         pycom.nvs_erase(key + "_INDEX_" + str(i))
     pycom.nvs_set(key + "_HEAD", 0)
@@ -80,7 +81,7 @@ def pop_x_vals(key, data_head):
 #Send data points over LoRaWAN
 def send_data(x_vals):
     lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
-    dev_addr = struct.unpack(">l", ubinascii.unhexlify('260BF2DE'))[0]
+    dev_addr = ustruct.unpack(">l", ubinascii.unhexlify('260BF2DE'))[0]
     app_swkey = ubinascii.unhexlify('FBB6FBD7EC975D517A94CA5268C010C4')
     nwk_swkey = ubinascii.unhexlify('CFD2E8E7A6B86130F896DADE6495CB5D')
     lora.join(activation=LoRa.ABP, auth=(dev_addr, nwk_swkey, app_swkey))
@@ -92,7 +93,7 @@ def send_data(x_vals):
 
     data = bytes()
     for x in x_vals:
-        data += encode.float_to_fixed_point(x, 5, min_size=2, max_size=2)
+        data += encode.float_to_byte_array(x)
 
     print("Sending {}|{}".format(x_vals, data))
     s.send(data)

@@ -2,7 +2,6 @@ from curses.ascii import NUL
 from datetime import datetime, timedelta
 import paho.mqtt.client as mqtt
 from dateutil.parser import isoparse
-import os
 import json
 import lib.encode as encode
 from sys import argv
@@ -30,9 +29,9 @@ def decode_payload(devid, payload):
         if not ("uplink_message" in payload and "decoded_payload" in payload["uplink_message"] and "bytes" in payload["uplink_message"]["decoded_payload"]):
             return None
         b = payload["uplink_message"]["decoded_payload"]["bytes"]
-        n_data_points = int(len(b) / 2)
+        n_data_points = int(len(b) / 4)
         print(b)
-        temps = [encode.fixed_point_to_float(b[2*i:2*(i+1)], 5) for i in range(n_data_points)]
+        temps = [encode.byte_array_to_float(b[4*i:4*(i+1)]) for i in range(n_data_points)]
         return {"temperature": temps}
 
 def on_message(client, userdata, msg):
@@ -78,10 +77,9 @@ def process_pred_temp_data(data):
     print("Prediction", datetime.now().strftime("%d-%m-%y %H:%M:%S"), data)
 
 class Predictor:
-    def __init__(self, x_0, P_0, Q=0., R=1., error_threshold=0.05, ):
+    def __init__(self, x_0, P_0, Q=1., R=1.):
         self.Q = Q
         self.R = R
-        self.threshold = error_threshold
         
         self.x = x_0
         self.P = P_0

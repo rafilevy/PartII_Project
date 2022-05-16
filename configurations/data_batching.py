@@ -44,14 +44,13 @@ except ValueError:
 pycp = Pycoproc()
 si = SI7006A20(pycp) #temperature / humiditiy
 temp = si.temperature()
-encoded_temp = encode.float_to_fixed_point(temp, min_size=2, max_size=2)
 
 if cycle_num == (BATCH_SIZE - 1): #Batch size reached, send batched measurements
     data = bytes()
     for i in range(BATCH_SIZE - 1):
         t = pycom.nvs_get("data_" + str(i))
-        data += encode.int_to_byte_array(t, 2)
-    data += encoded_temp
+        data += encode.float_to_byte_array(encode.int_to_float(t))
+    data += encode.float_to_byte_array(temp)
 
     lora = join_lorawan()
     s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
@@ -60,8 +59,8 @@ if cycle_num == (BATCH_SIZE - 1): #Batch size reached, send batched measurements
     s.send(data)
     lora.nvram_save()
 else: #Batch size not yet reached Save measured data to NVRAM
-    int_encoded = encode.byte_array_to_int(encoded_temp)
-    pycom.nvs_set("data_" + str(cycle_num), int_encoded)
+    temp_enc = encode.float_to_byte_array(temp)
+    pycom.nvs_set("data_" + str(cycle_num), temp_enc)
 
 #Update number of messages which have been batched 
 cycle_num = (cycle_num + 1) % BATCH_SIZE
