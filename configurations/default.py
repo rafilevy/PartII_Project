@@ -21,7 +21,6 @@ pycom.heartbeat(False)
 #Configure LoRa connection parameters and join network
 app_eui = ubinascii.unhexlify('0000000000000000')
 app_key = ubinascii.unhexlify('9BE36B464B60455F8CC3760BAFB46F98')
-
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 lora.nvram_restore()
 

@@ -31,7 +31,7 @@ def join_lorawan():
             print("Attempting to join...")
             time.sleep(2)
     else:
-        print('Restored saved connection')
+        printq('Restored saved connection')
     return lora
 
 #Get the number of messages which have been batched but not sent

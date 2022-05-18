@@ -6,11 +6,12 @@ If a prediction is correctly made the data is saved and nothing is sent.
 If a prediction fails the device will retreive all the batched data from storage and send this to the server
 """
 
+from platform import machine
 import socket
 import math
 import ubinascii
 import encode
-import ustruct
+import time
 import pycom
 from machine import Timer
 from network import LoRa
@@ -81,10 +82,17 @@ def pop_x_vals(key, data_head):
 #Send data points over LoRaWAN
 def send_data(x_vals):
     lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
-    dev_addr = ustruct.unpack(">l", ubinascii.unhexlify('260BF2DE'))[0]
-    app_swkey = ubinascii.unhexlify('FBB6FBD7EC975D517A94CA5268C010C4')
-    nwk_swkey = ubinascii.unhexlify('CFD2E8E7A6B86130F896DADE6495CB5D')
-    lora.join(activation=LoRa.ABP, auth=(dev_addr, nwk_swkey, app_swkey))
+    lora.nvram_restore()
+    if not lora.has_joined():
+        print("Rejoining LoRa")
+        app_eui = ubinascii.unhexlify('0000000000000000')
+        app_key = ubinascii.unhexlify('9BE36B464B60455F8CC3760BAFB46F98')
+        lora.join(activation=LoRa.OTAA, auth=(app_eui, app_key), timeout=0)
+        while not lora.has_joined():
+            print("Attempting to join...")
+            time.sleep(2)
+    else:
+        print('Restored saved connection')
 
     # Create a LoRa socket
     s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
@@ -97,7 +105,9 @@ def send_data(x_vals):
 
     print("Sending {}|{}".format(x_vals, data))
     s.send(data)
+
     s.setblocking(False)
+    lora.nvram_save()
 
 #Take a temperature measurement
 z = si.temperature()
